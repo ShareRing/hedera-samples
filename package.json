@@ -1,0 +1,28 @@
+{
+  "name": "hedera-samples",
+  "version": "0.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "start:backend": "yarn workspace @hedera-samples/backend start",
+    "start:frontend": "yarn workspace @hedera-samples/frontend start",
+    "test": "nx run-many --target=test --all",
+    "lint": "nx run-many --target=lint --all",
+    "prettier": "nx run-many --target=prettier --all",
+    "prepare": "(is-ci || husky install) && npx patch-package"
+  },
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "19.8.2",
+    "nx": "19.8.2",
+    "eslint": "^8.43.0",
+    "husky": "^8.0.3",
+    "is-ci": "^3.0.1",
+    "lint-staged": "^13.2.2",
+    "prettier": "^2.8.8"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

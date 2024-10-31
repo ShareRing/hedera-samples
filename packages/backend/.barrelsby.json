@@ -1,0 +1,5 @@
+{
+  "directory": ["./src/controllers", "./src/models", "./src/repositories", "./src/providers/hedera"],
+  "exclude": ["__mock__", "__mocks__", ".spec.ts", ".d.ts"],
+  "delete": true
+}

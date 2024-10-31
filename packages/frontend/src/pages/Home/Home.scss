@@ -1,0 +1,11 @@
+.sharering-query {
+  width: 256px;
+  height: 256px;
+  #qrcode,
+  .qrcode-content {
+    height: 100%;
+  }
+}
+.qrcode-content canvas {
+  border: 0.5em solid #fff;
+}

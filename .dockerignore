@@ -1,0 +1,8 @@
+node_modules
+Dockerfile
+.env.local
+.env.development
+.eslint*
+.prettier*
+.gitignore
+.gitkeep

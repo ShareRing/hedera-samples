@@ -1,0 +1,24 @@
+@import './assets/sass/variables';
+
+[data-bs-theme='dark'] body {
+  background-image: url(./assets/images/bg-dark.jpg);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position-x: center;
+}
+
+[data-bs-theme='light'] body {
+  background-image: url(./assets/images/bg-light.jpg);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position-x: center;
+}
+
+.bi {
+  vertical-align: -0.125em;
+  fill: currentColor;
+}
+
+[data-bs-theme='dark'] .logo path {
+  fill: #fff;
+}
