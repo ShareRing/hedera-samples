@@ -2,6 +2,8 @@
 
 Code samples to showcase Hedera integration, particularly how to request data from end-user with ShareRing Link and how to do some verifications against on-chain data.
 
+The samples run on `testenv` in conjunction with a special test build.
+
 ## Backend
 
 The backend server consists of a couple APIs:
@@ -34,7 +36,18 @@ One, generates a ShareRing Link QR code with some parameters.
 
 Two, makes call to the backend API to get and display session data and verification results.
 
-## Getting started
+## Create ShareRing Link query
+
+1. Get a subscription on ShareRing Link (testenv)
+2. Create an endpoint pointing to the backend server `/sessions/webhook`. Can use the free [Webhook.site](https://webhook.site) and use [`whcli`](https://docs.webhook.site/cli.html) to receive data and forward to localhost.
+3. Create a query, select the endpoint created above. Query must request the following information for verification purposes:
+
+- `ShareLedger_Address`
+- `Matic_Address` - this is the ethereum addess generated from the same seedphrase
+- `VCT token ID` - the DID
+- other information such as `name`, `date_of_birth`, etc.
+
+## Run the servers
 
 The repo uses `yarn` as package manager. Install it first. At root directory:
 
