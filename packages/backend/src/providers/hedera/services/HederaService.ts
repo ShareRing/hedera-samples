@@ -1,13 +1,13 @@
 import { Constant, Inject, InjectorService, Service } from "@tsed/di";
-import { HederaSettings } from "../interfaces/HederaSettings";
-import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
-import abi from "../abi/VerifiableCredentialsToken.json";
 import { Logger } from "@tsed/logger";
-import { SessionRepository } from "../../../repositories";
-import { BinaryLike, createHash } from "crypto";
+import { BinaryLike, BinaryToTextEncoding, createHash } from "crypto";
+import { Contract, ethers, JsonRpcProvider, Wallet } from "ethers";
 import MerkleTree from "merkletreejs";
+import { SessionRepository } from "../../../repositories";
+import abi from "../abi/VerifiableCredentialsToken.json";
+import { HederaSettings } from "../interfaces/HederaSettings";
 import { StartVerification } from "../interfaces/StartVerification";
-import { VerificationResult, VerificationLevel } from "../interfaces/VerificationResult";
+import { VerificationLevel, VerificationResult } from "../interfaces/VerificationResult";
 
 @Service()
 export class HederaService implements StartVerification {
@@ -114,15 +114,29 @@ export class HederaService implements StartVerification {
       // extract attributes, take vct token id (did) and addresses
       const { vct, ShareLedger_Address: shareledgerAddress, Matic_Address: ethereumAddress, ...rest } = attributes;
 
+      // 1. check token owner
       const ownerEtheriumAddress = await this.ownerOf(vct);
       verificationResult.ownerEtheriumAddress = ownerEtheriumAddress;
-      verificationResult.ownerMatched = ethereumAddress === ownerEtheriumAddress;
+      verificationResult.ownerMatched = ethereumAddress.toLowerCase() === ownerEtheriumAddress.toLowerCase();
 
       // get merkle root
       const merkleRoot = await this.getMekleRoot(vct);
 
       for (const k of Object.keys(rest)) {
-        const [attrName] = k.split(".");
+        let attrName = k;
+
+        const attrNameArr = k.split(".");
+        if (attrNameArr.length === 1) {
+          // <attr>
+          attrName = k;
+        } else if (attrNameArr.length < 3) {
+          // <attr>.<level>
+          attrName = attrNameArr[0];
+        } else {
+          // <doc>.<attr>.<level>.<something>...
+          attrName = attrNameArr[1];
+        }
+
         verificationResult.attributes[attrName] = {
           attributeHashMatched: false,
           merkleOffchainMatched: false,
@@ -130,27 +144,33 @@ export class HederaService implements StartVerification {
           verificationLevel: VerificationLevel.Undefined
         };
         // parse attribute value
-        const [countryCode, docType, attrValue, attrValueHashFromDevice, proofs] = JSON.parse(rest[k]);
-        const attrNameHash = createHash("sha256").update(`${countryCode.toLowerCase()}.${docType.toLowerCase()}.${attrName}`).digest("hex");
+        const [attrValue, attrValueHashFromDevice, proofs] = JSON.parse(rest[k]);
 
-        // <attribute_name>.<attribute_value>
-        const attrValueHash = createHash("sha256")
-          .update(`${countryCode.toLowerCase()}.${docType.toLowerCase()}.${attrName}.${attrValue}`)
-          .digest("hex");
+        let attrNameHash;
+        let attrValueHash;
 
-        // check hash
+        if (Array.isArray(attrValue)) {
+          const [countryCode, docType, value] = attrValue;
+          attrNameHash = sha256(`${countryCode.toLowerCase()}.${docType.toLowerCase()}.${attrName}`, "hex");
+          attrValueHash = sha256(`${countryCode.toLowerCase()}.${docType.toLowerCase()}.${attrName}.${value}`, "hex");
+        } else {
+          attrNameHash = sha256(`${attrName}`, "hex");
+          attrValueHash = sha256(`${attrName}.${attrValue}`, "hex");
+        }
+
+        // 2. check attribute hash
         if (attrValueHashFromDevice === attrValueHash) {
           verificationResult.attributes[attrName].attributeHashMatched = true;
         }
 
-        // verify proofs off chain
+        // 3. verify proofs off chain
         const merkleTree = new MerkleTree([], sha256, { sort: true }); // sort: true is required to match with the implementation on contracts
         verificationResult.attributes[attrName].merkleOffchainMatched = merkleTree.verify(proofs, attrValueHash, merkleRoot);
 
         const [level, verified] = await Promise.all([
           // get verification level
           this.getAttributesData(vct, attrNameHash),
-          // verify on chain
+          // 4. verify proofs on chain
           this.verifyAttribute(vct, attrValueHash, proofs)
         ]);
 
@@ -170,4 +190,9 @@ export class HederaService implements StartVerification {
   }
 }
 
-const sha256 = (value: BinaryLike) => createHash("sha256").update(value).digest();
+function sha256(value: BinaryLike): Buffer;
+function sha256(value: BinaryLike, encoding: BinaryToTextEncoding): string;
+function sha256(value: BinaryLike, encoding?: BinaryToTextEncoding) {
+  const hash = createHash("sha256").update(value);
+  return encoding ? hash.digest(encoding) : hash.digest();
+}
