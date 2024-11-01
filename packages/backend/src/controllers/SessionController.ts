@@ -47,6 +47,19 @@ export class SessionController {
     try {
       const attributes = typeof params.values === "string" ? JSON.parse(params.values) : params.values;
 
+      const { vct, ShareLedger_Address: shareledgerAddress, Matic_Address: ethereumAddress } = attributes;
+
+      // some required info
+      if (!vct) {
+        throw new BadRequest("`vct` must be specified");
+      }
+      if (!shareledgerAddress) {
+        throw new BadRequest("`ShareLedger_Address` must be specified");
+      }
+      if (!ethereumAddress) {
+        throw new BadRequest("`Matic_Address` must be specified");
+      }
+
       // create object base on the received attributes
       const sessionId = params.sessionId || v4();
 
