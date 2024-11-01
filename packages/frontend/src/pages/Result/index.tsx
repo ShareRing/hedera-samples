@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
-import { Alert, Card, Col, Container, Row, Spinner, Table } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
-import { useAppDispatch, usePolling } from '../../hooks';
-import { getSession, Session, VerificationLevel } from '../../components/Vqr/vqrSlice';
+import { Alert, Card, Container, Spinner, Table } from 'react-bootstrap';
 import { CheckLg, XLg } from 'react-bootstrap-icons';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getSession, Session, VerificationLevel } from '../../components/Vqr/vqrSlice';
+import { useAppDispatch, usePolling } from '../../hooks';
 
 const Result = () => {
   const dispatch = useAppDispatch();
-  const { state } = useLocation();
+  const navigate = useNavigate();
+  // const { state } = useLocation();
   // const sessionId = '92235de2-bd82-4a4b-a087-c11cde209ef2';
+  const { sessionId } = useParams();
+  if (!sessionId) {
+    navigate('/');
+  }
 
   const [data, setData] = useState<Session>();
 
   const [stop] = usePolling(
     async () => {
-      if (state?.sessionId) {
+      if (sessionId) {
         try {
-          const payload = await dispatch(getSession({ sessionId: state.sessionId })).unwrap();
+          const payload = await dispatch(getSession({ sessionId })).unwrap();
           if (payload) {
             setData({ ...payload });
           }
@@ -28,7 +33,7 @@ const Result = () => {
       }
     },
     1500,
-    [state?.sessionId]
+    [sessionId]
   );
 
   useEffect(() => {
@@ -39,7 +44,7 @@ const Result = () => {
 
   return (
     <>
-      <main className="d-flex vh-100 vw-100 text-center justify-content-center align-items-center">
+      <main className="d-flex min-vh-100 my-5 text-center justify-content-center">
         <Container>
           {!data && <Spinner animation="grow" />}
           {data && (

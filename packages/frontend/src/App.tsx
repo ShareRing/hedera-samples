@@ -18,7 +18,7 @@ function App() {
       <BrowserRouter basename={process.env.PUBLIC_URL}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/result" element={<Result />} />
+          <Route path="/result/:sessionId" element={<Result />} />
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

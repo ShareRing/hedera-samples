@@ -30,7 +30,7 @@ const Home = () => {
     //   setSessionId(data?.detail?.session_id);
     // }
     if (data?.detail?.session_id) {
-      navigate('/result', { state: { sessionId: data?.detail?.session_id } });
+      navigate(`/result/${data?.detail?.session_id}`);
     }
   };
 
